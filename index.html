@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>大話骰｜v9 3D Stable</title>
+  <style>
+    :root{
+      --bg:#0b2f1d; --bg2:#07160f; --text:#e9f6ea; --muted:#97b7a0;
+      --die:50px; --depth:12px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:10px;
+      background:radial-gradient(900px 500px at 50% 35%,#1d5a3a 0%,transparent 65%),linear-gradient(180deg,var(--bg),var(--bg2));
+      color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif}
+    .app{width:min(100%,430px)}
+    .title{text-align:center}
+    .title h1{margin:0;font-size:40px;letter-spacing:2px}
+    .sub{color:var(--muted);font-weight:600;letter-spacing:1px}
+    .titleRow{display:flex;align-items:center;justify-content:center;gap:10px}
+
+    .titleIcon{width:30px;height:30px;display:block}
+
+    .pill{margin:12px auto;display:block;width:max-content;padding:8px 16px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff2a;color:#97e89f;font-weight:800}
+    .stage{border:1px solid #ffffff1f;border-radius:18px;background:#0000002e;padding:14px;box-shadow:0 14px 30px #0000005a}
+    .row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;justify-items:center;min-height:96px;align-items:end}
+
+    .die{position:relative;width:calc(var(--die) + var(--depth));height:calc(var(--die) + var(--depth));filter:drop-shadow(0 8px 14px rgba(0,0,0,.42));}
+    .cube{position:absolute;left:0;top:0;width:100%;height:100%;transform:translateY(0) rotate(0deg)}
+
+    .front,.top,.side{position:absolute;border:1px solid #c6ced6}
+    .front{
+      left:0; top:var(--depth); width:var(--die); height:var(--die);
+      border-radius:12px;
+      background:linear-gradient(145deg,#fff,#ecf2f7);
+      box-shadow:inset -4px -5px 8px rgba(0,0,0,.07), inset 4px 4px 8px rgba(255,255,255,.85);
+      display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:12%;gap:6%;
+    }
+    .top{
+      left:var(--depth); top:0; width:var(--die); height:var(--depth);
+      border-radius:8px 8px 0 0;
+      background:linear-gradient(180deg,#ffffff,#e9eff6);
+      transform:skewX(-45deg);
+      transform-origin:left bottom;
+    }
+    .side{
+      left:var(--die); top:var(--depth); width:var(--depth); height:var(--die);
+      border-radius:0 8px 8px 0;
+      background:linear-gradient(180deg,#e9eff6,#dce5ee);
+      transform:skewY(-45deg);
+      transform-origin:left top;
+    }
+
+    .pip{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 35%,#2a3440,#111821)}
+    .v1 .pip:nth-child(1){grid-area:2/2}
+    .v2 .pip:nth-child(1){grid-area:1/1}.v2 .pip:nth-child(2){grid-area:3/3}
+    .v3 .pip:nth-child(1){grid-area:1/1}.v3 .pip:nth-child(2){grid-area:2/2}.v3 .pip:nth-child(3){grid-area:3/3}
+    .v4 .pip:nth-child(1){grid-area:1/1}.v4 .pip:nth-child(2){grid-area:1/3}.v4 .pip:nth-child(3){grid-area:3/1}.v4 .pip:nth-child(4){grid-area:3/3}
+    .v5 .pip:nth-child(1){grid-area:1/1}.v5 .pip:nth-child(2){grid-area:1/3}.v5 .pip:nth-child(3){grid-area:2/2}.v5 .pip:nth-child(4){grid-area:3/1}.v5 .pip:nth-child(5){grid-area:3/3}
+    .v6 .pip:nth-child(1){grid-area:1/1}.v6 .pip:nth-child(2){grid-area:1/3}.v6 .pip:nth-child(3){grid-area:2/1}.v6 .pip:nth-child(4){grid-area:2/3}.v6 .pip:nth-child(5){grid-area:3/1}.v6 .pip:nth-child(6){grid-area:3/3}
+
+    .cube.rolling{animation:roll .72s cubic-bezier(.22,.8,.34,1)}
+    @keyframes roll{
+      0%{transform:translateY(0) rotate(0deg) scale(1)}
+      25%{transform:translateY(-14px) rotate(-12deg) scale(.98)}
+      55%{transform:translateY(6px) rotate(10deg) scale(1.02)}
+      100%{transform:translateY(0) rotate(0deg) scale(1)}
+    }
+
+    .btn{margin-top:12px;width:100%;border:none;border-radius:16px;padding:14px 16px;font-size:34px;font-weight:900;letter-spacing:3px;color:#08220f;background:linear-gradient(180deg,#79e67f,#3ec65a);box-shadow:0 12px 24px #26b84a66}
+    .res{margin-top:12px;border:1px solid #ffffff1f;border-radius:14px;background:#0000002a;padding:12px;text-align:center}
+    .vals{font-size:32px;font-weight:900;letter-spacing:6px;color:#8ef59b}
+    .sum{font-size:44px;font-weight:900}
+    .tip{margin-top:8px;color:#89a594;font-size:13px}
+    .sound{margin:10px auto 0;background:#ffffff12;border:1px solid #ffffff22;border-radius:999px;padding:9px 16px;color:var(--muted);display:block}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="title">
+      <div class="titleRow">
+        <svg class="titleIcon" viewBox="0 0 32 32" aria-hidden="true">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e8eef5"/></linearGradient>
+            <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9eff6"/><stop offset="1" stop-color="#d8e1ea"/></linearGradient>
+          </defs>
+          <rect x="3" y="9" rx="4" ry="4" width="18" height="18" fill="url(#g1)" stroke="#bfcad3"/>
+          <polygon points="9,9 23,9 27,5 13,5" fill="url(#g2)" stroke="#bfcad3"/>
+          <polygon points="21,9 27,5 27,19 21,27" fill="#dce5ee" stroke="#bfcad3"/>
+          <circle cx="12" cy="18" r="1.6" fill="#1b2530"/>
+        </svg>
+        <h1>大話骰</h1>
+      </div>
+      <div class="sub">PREMIUM 3D · CASINO STYLE</div>
+    </section>
+
+    <span class="pill">總點數：<span id="sumTop">0</span></span>
+    <section class="stage"><div class="row" id="row"></div></section>
+    <button class="btn" id="roll">擲骰</button>
+    <button class="sound" id="sound">🔊 音效</button>
+
+    <section class="res">
+      <div style="color:#9bc4a7">結果</div>
+      <div class="vals" id="vals">- ・ - ・ - ・ - ・ -</div>
+      <div class="sum" id="sum">0</div>
+      <div class="tip">提示：可輪流擲，方便朋友聚會玩大話骰</div>
+    </section>
+  </main>
+
+  <script>
+    const row=document.getElementById('row'),vals=document.getElementById('vals'),sum=document.getElementById('sum'),sumTop=document.getElementById('sumTop');
+    const layouts={1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[1,3],[3,1],[3,3]],5:[[1,1],[1,3],[2,2],[3,1],[3,3]],6:[[1,1],[1,3],[2,1],[2,3],[3,1],[3,3]]};
+    let audioCtx=null,soundOn=true;
+
+    function mk(){
+      const d=document.createElement('div');d.className='die';
+      d.innerHTML='<div class="cube"><div class="top"></div><div class="side"></div><div class="front"></div></div>';
+      row.appendChild(d);return d;
+    }
+    const dice=Array.from({length:5},mk);
+
+    function drawFront(cube,n){
+      const f=cube.querySelector('.front'); f.className='front v'+n; f.innerHTML='';
+      layouts[n].forEach(([r,c])=>{const p=document.createElement('span');p.className='pip';p.style.gridRow=r;p.style.gridColumn=c;f.appendChild(p);});
+    }
+
+    function ensureAudio(){if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(AC) audioCtx=new AC();} if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();}
+    function play(){if(!soundOn||!audioCtx) return; const t=audioCtx.currentTime; [220,290,340,300].forEach((hz,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.value=hz;g.gain.setValueAtTime(0.0001,t+i*0.04);g.gain.exponentialRampToValueAtTime(0.03,t+i*0.04+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.04+0.11);o.connect(g).connect(audioCtx.destination);o.start(t+i*0.04);o.stop(t+i*0.04+0.12);});}
+
+    function roll(playAudio=true){
+      if(playAudio){try{ensureAudio();play();}catch{}}
+      const nums=[];
+      dice.forEach((d,i)=>{const n=Math.floor(Math.random()*6)+1;nums.push(n);const c=d.querySelector('.cube');c.classList.remove('rolling');void c.offsetWidth;c.classList.add('rolling');setTimeout(()=>drawFront(c,n),120+i*24);});
+      setTimeout(()=>{const s=nums.reduce((a,b)=>a+b,0);vals.textContent=nums.join(' ・ ');sum.textContent=s;sumTop.textContent=s;},740);
+    }
+
+    document.getElementById('roll').addEventListener('click',()=>roll(true));
+    document.getElementById('sound').addEventListener('click',(e)=>{ensureAudio();soundOn=!soundOn;e.target.textContent=soundOn?'🔊 音效':'🔇 靜音';e.target.style.opacity=soundOn?'1':'.6';});
+    setTimeout(()=>roll(false),120);
+  </script>
+</body>
+</html>
